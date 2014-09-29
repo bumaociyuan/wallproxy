@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 是否使用ini作为配置文件，0不使用
-ini_config = 1386596276
+ini_config = 1411960135
 # 监听ip
 listen_ip = '127.0.0.1'
 # 监听端口

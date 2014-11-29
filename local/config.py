@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 是否使用ini作为配置文件，0不使用
-ini_config = 1386596276
+ini_config = 1
 # 监听ip
 listen_ip = '127.0.0.1'
 # 监听端口
@@ -19,38 +19,52 @@ web_password = 'admin'
 global_proxy = None
 # URLFetch参数
 fetch_keepalive = 1
+debuglevel = 0
 check_update = 0
 
 def config():
     Forward, set_dns, set_resolve, set_hosts, check_auth, redirect_https = import_from('util')
+    YOUKU = Forward('hosts://api.youku.com:80')
     RAW_FORWARD = FORWARD = Forward()
     set_dns('168.95.1.1')
-    set_resolve('talk.google.com talkx.l.google.com .youtube.com .facebook.com .googlevideo.com')
-    google_sites = ('.appspot.com', '.google.com', '.google.com.hk', '.googlecode.com', '.googleusercontent.com', '.googlegroups.com', '.google-analytics.com', '.gstatic.com', '.googleapis.com', '.blogger.com', '.ggpht.com', 'golang.org')
-    google_hosts = 'www.google.com www.google.com.hk mail.google.com www.google.at www.google.es www.google.ca www.google.com.mx www.google.com.pa www.google.gl www.google.com.gt www.google.com.bz www.google.com.sv www.google.hn'
+    set_resolve('talk.google.com talkx.l.google.com .youtube.com .facebook.com .googlevideo.com .dropbox.com .dropboxusercontent.com')
+    google_sites = ('.appspot.com', '.google.com', '.google.com.hk', '.googlecode.com', '.googleusercontent.com', '.googlegroups.com', '.google-analytics.com', '.gstatic.com', '.googleapis.com', '.blogger.com', '.ggpht.com', 'golang.org', 'goo.gl', 'googledrive.com', '.googledrive.com')
+    google_hosts = '2.2.2.2 www.google.com www.google.com.hk 203.66.124.173 202.39.143.94 203.66.124.237 103.25.178.59 203.66.124.168 218.176.242.109 218.176.242.236 218.176.242.49 218.176.242.45 203.211.0.59 203.66.124.241 203.66.124.247 61.219.131.227 61.219.131.216 218.176.242.113 203.66.124.182 218.176.242.158 210.61.221.103 61.219.131.231 218.176.242.88 61.219.131.232 210.61.221.108 61.219.131.118 218.176.242.232 103.25.178.42 210.61.221.123 210.61.221.153 202.39.143.109 202.39.143.108 203.66.124.172 218.176.242.221 202.39.143.103 210.61.221.183 218.176.242.119 202.39.143.104 61.219.131.221 178.45.251.94 210.61.221.109 218.176.242.108 218.176.242.55 202.39.143.30 203.211.0.25 210.61.221.99 210.61.221.119 203.211.0.40 210.61.221.158 218.176.242.30 203.211.0.29 203.66.124.212 103.25.178.38 61.219.131.222 218.176.242.162 61.219.131.103'
     set_hosts(google_sites, google_hosts)
     set_hosts('www.youtube.com upload.youtube.com', google_hosts)
 
     from plugins import misc; misc = install('misc', misc)
     PAGE = misc.Page('page.html')
+    redirect_rules = misc.Redirects(# -*- coding:utf-8 -*-
+[
+    # 修复userscripts链接
+    (r'^https?://userscripts\.org(?::8080)?/', 'http://userscripts-mirror.org/'),
+    # 禁止广告引流
+    (r'^https?://click\.union\.jd\.com\/.+?&to=([^&]+)(?:&.+)?', r'\1'),
+    # 解决WayOS劫持流量插入广告
+    #(r'(?i).+?\.unionabcd\.com[:/].+?&surl=([^&]+).*', r'http://\1/?'),
+    # 解决部分运营商劫持流量插入广告
+    #(r'^http://\d+(?:\.\d+){3}(?::\d+)?/redirect\d+\.php\?desturl=([^&]+)&augid1=.+?julyid=.*', r'\1'),
+]
+)
 
     from plugins import paas; paas = install('paas', paas)
-    GAE = paas.GAE(appids=['goblin1alchemist', 'zx00000000000', 'zx1982az', 'zx444441444', 'zx44444444', 'zx4654x', 'zx555555555', 'zx666666666', 'zx77777777', 'zx888888887'], listen='8087', path='/fetch.py', scheme='https', hosts=google_hosts, max_threads=3, fetch_mode=1)
+    GAE = paas.GAE(appids=['goblin1alchemist', 'zx00000000000', 'zx1982az', 'zx444441444', 'zx44444444', 'zx4654x', 'zx555555555', 'zx666666666', 'zx77777777', 'zx888888887'], listen='8087', path='/fetch.py', scheme='https', hosts=google_hosts, bufsize=65536, max_threads=3, fetch_mode=1)
 
     PacFile, RuleList, HostList = import_from('pac')
     def apnic_parser(data):
         from re import findall
         return '\n'.join(findall(r'(?i)\|cn\|ipv4\|((?:\d+\.){3}\d+\|\d+)\|', data))
-    forcehttps_sites = RuleList('http://*.appspot.com/ \n http://*.google.com/ \n http://*.google.com.hk/ \n http://*.googlecode.com/ \n http://*.googleusercontent.com/ \n http://*.blogger.com/ \n http://www.youtube.com/ \n @@http://books.google.com/ \n @@http://translate.google.com/ \n @@http://scholar.google.com/ \n @@http://feedproxy.google.com/ \n @@http://fusion.google.com/ \n @@http://picasa.google.com/ \n @@http://*pack.google.com/ \n @@http://*android.clients.google.com/ \n @@http://wenda.google.com.hk/ \n @@http://www.google.com*/imgres? \n @@http://www.google.com*/translate_t? \n @@http://www.google.com/analytics/ \n @@http://wiki.*.googlecode.com/ \n @@http:/// \n @@http://website.*.googlecode.com/ \n @@http://www.google.com*/custom? \n @@http://www.google.com/dl/ \n @@http://www.google.com/drive/ \n @@http://www.google.com*/alerts?')
-    autorange_rules = RuleList('||c.youtube.com \n ||atm.youku.com \n ||googlevideo.com \n http*://av.vimeo.com/ \n http*://smile-*.nicovideo.jp/ \n http*://video.*.fbcdn.net/ \n http*://s*.last.fm/ \n http*://x*.last.fm/ \n ||x.xvideos.com \n ||edgecastcdn.net \n ||d.rncdn3.com \n http*://cdn*.public.tube8.com/ \n http*://videos.flv*.redtubefiles.com/ \n http*://cdn*.public.extremetube.phncdn.com/ \n http*://cdn*.video.pornhub.phncdn.com/ \n ||mms.vlog.xuite.net \n http*://vs*.thisav.com/ \n http*://archive.rthk.hk/ \n http*://video*.modimovie.com/ \n http*://v*.cache*.c.docs.google.com/ \n /^https?:\\/\\/[^\\/]+\\/[^?]+\\.(?:cab|f4v|flv|hlv|m4v|mp4|mp3|ogg|avi|exe|zip|iso|ipa|rar|bz2|xz|deb|dmg|3gp)(?:$|\\?)/ \n http*://*.googleusercontent.com/videoplayback?')
+    forcehttps_sites = RuleList('http://*.appspot.com/ \n http://*.google.com/ \n http://*.google.com.hk/ \n http://*.googlecode.com/ \n http://*.googleusercontent.com/ \n http://*.blogger.com/ \n http://www.youtube.com/ \n http://goo.gl/ \n http://googledrive.com/ \n http://*.googledrive.com/ \n @@http://books.google.com/ \n @@http://translate.google.com/ \n @@http://scholar.google.com/ \n @@http://feedproxy.google.com/ \n @@http://fusion.google.com/ \n @@http://picasa.google.com/ \n @@http://*pack.google.com/ \n @@http://*android.clients.google.com/ \n @@http://wenda.google.com.hk/ \n @@http://www.google.com*/imgres? \n @@http://www.google.com*/translate_t? \n @@http://www.google.com/analytics/ \n @@http://wiki.*.googlecode.com/ \n @@http:/// \n @@http://website.*.googlecode.com/ \n @@http://www.google.com*/custom? \n @@http://www.google.com/dl/ \n @@http://www.google.com/drive/ \n @@http://www.google.com*/alerts?')
+    autorange_rules = RuleList('||c.youtube.com \n ||atm.youku.com \n ||googlevideo.com \n http*://av.vimeo.com/ \n http*://smile-*.nicovideo.jp/ \n http*://video.*.fbcdn.net/ \n http*://s*.last.fm/ \n http*://x*.last.fm/ \n ||x.xvideos.com \n ||edgecastcdn.net \n ||d.rncdn3.com \n http*://cdn*.public.tube8.com/ \n http*://videos.flv*.redtubefiles.com/ \n http*://cdn*.public.extremetube.phncdn.com/ \n http*://cdn*.video.pornhub.phncdn.com/ \n ||mms.vlog.xuite.net \n http*://vs*.thisav.com/ \n http*://archive.rthk.hk/ \n http*://video*.modimovie.com/ \n http*://v*.cache*.c.docs.google.com/ \n /^https?:\\/\\/[^\\/]+\\/[^?]+\\.(?:cab|f4v|flv|hlv|m4v|mp4|mp3|ogg|avi|msi|exe|zip|iso|ipa|rar|bz2|gz|xz|deb|dmg|3gp)(?:$|\\?)/ \n http*://*.googleusercontent.com/videoplayback? \n @@/^https?:\\/\\/manifest\\.googlevideo\\.com\\/api\\//')
     _GAE = GAE; GAE = lambda req: _GAE(req, autorange_rules.match(req.url, req.proxy_host[0]))
     import re; useragent_match = re.compile('(?i)mobile').search
     useragent_rules = RuleList('||twitter.com')
     withgae_sites = RuleList('||c.docs.google.com \n ||translate.google.com \n http*://books.google.com/books?id= \n http*://*.googleusercontent.com/videoplayback?')
     notruehttps_sites = HostList('.docs.google.com translate.google.com books.google.com')
-    truehttps_sites = HostList('.appspot.com .google.com .google.com.hk .googlecode.com .googleusercontent.com .googlegroups.com .google-analytics.com .gstatic.com .googleapis.com .blogger.com .ggpht.com')
-    crlf_rules = RuleList('/^https?:\\/\\/[^\\/]+\\.c\\.youtube\\.com\\/liveplay\\?/ \n /^https?:\\/\\/upload\\.youtube\\.com\\// \n /^https?:\\/\\/www\\.youtube\\.com\\/upload\\// \n /^https?:\\/\\/[^\\/]+\\.googlevideo\\.com\\/crossdomain\\.xml/')
-    hosts_rules = RuleList(' \n ||appspot.com \n ||google.com \n ||google.com.hk \n ||googlecode.com \n ||googleusercontent.com \n ||googlegroups.com \n ||google-analytics.com \n ||gstatic.com \n ||googleapis.com \n ||blogger.com \n ||ggpht.com \n ||golang.org')
+    truehttps_sites = HostList('.appspot.com .google.com .google.com.hk .googlecode.com .googleusercontent.com .googlegroups.com .google-analytics.com .gstatic.com .googleapis.com .blogger.com .ggpht.com goo.gl googledrive.com .googledrive.com')
+    crlf_rules = RuleList('/^https?:\\/\\/[^\\/]+\\.c\\.youtube\\.com\\/liveplay\\?/ \n /^https?:\\/\\/upload\\.youtube\\.com\\// \n /^https?:\\/\\/www\\.youtube\\.com\\/upload\\//')
+    hosts_rules = RuleList(' \n ||appspot.com \n ||google.com \n ||google.com.hk \n ||googlecode.com \n ||googleusercontent.com \n ||googlegroups.com \n ||google-analytics.com \n ||gstatic.com \n ||googleapis.com \n ||blogger.com \n ||ggpht.com \n ||golang.org \n ||goo.gl \n ||googledrive.com \n ||googledrive.com')
     unparse_netloc = import_from('utils')
     def build_fake_url(scheme, host):
         if scheme == 'https' and host[1] != 80 or host[1] % 1000 == 443:
@@ -70,10 +84,20 @@ def config():
         return RAW_FORWARD(req, _HttpsFallback)
 
     rulelist = (
+        (['string:///^https?:\\/\\/.*?(?:youku|qiyi|iqiyi|letv|sohu|ku6|ku6cdn|pps)\\.(?:com|tv)\\/crossdomain\\.xml$/'], 'PROXY API.YOUKU.COM:80'),
+        (['https://autoproxy-gfwlist.googlecode.com/svn/trunk/gfwlist.txt', 'userlist.ini'], 'PROXY *:8087;DIRECT'),
+    )
+    iplist = (
+    )
+    PacFile(rulelist, iplist, ['proxy.pac'], ['DIRECT', 'DIRECT', 'DIRECT'])
+
+    rulelist = (
+        (RuleList(['string:///^https?:\\/\\/.*?(?:youku|qiyi|iqiyi|letv|sohu|ku6|ku6cdn|pps)\\.(?:com|tv)\\/crossdomain\\.xml$/']), YOUKU),
         (RuleList(['https://autoproxy-gfwlist.googlecode.com/svn/trunk/gfwlist.txt', 'userlist.ini']), GAE),
     )
     httpslist = (
-        (rulelist[0][0], None),
+        (rulelist[0][0], YOUKU),
+        (rulelist[1][0], None),
     )
 
     def find_gae_handler(req):
@@ -89,6 +113,8 @@ def config():
             if needhttps and getattr(req, '_r', '') != url:
                 req._r = url
                 return redirect_https
+            handler = redirect_rules(req)
+            if handler: return handler
             if crlf_rules.match(url, host):
                 req.crlf = 1
                 return FORWARD
@@ -112,6 +138,8 @@ def config():
             if needhttps and getattr(req, '_r', '') != url:
                 req._r = url
                 return redirect_https
+            handler = redirect_rules(req)
+            if handler: return handler
             if crlf_rules.match(url, host):
                 req.crlf = 1
                 return FORWARD
